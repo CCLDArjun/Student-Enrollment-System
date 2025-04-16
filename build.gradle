@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.example'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Replace with your DB - here’s MySQL example
+    implementation 'mysql:mysql-connector-java:8.0.33'
+}
+
+application {
+    // Set the main class here
+    mainClass = 'Main'
+}
+
