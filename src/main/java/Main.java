@@ -1,6 +1,7 @@
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
+import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,7 +21,7 @@ public class Main {
             stmt.execute("CREATE TABLE IF NOT EXISTS Students (studentID INT, studentName VARCHAR(100), password VARCHAR(64));");
             stmt.execute("CREATE TABLE IF NOT EXISTS Professors (professorID INT, professorName VARCHAR(100))");
             stmt.execute("CREATE TABLE IF NOT EXISTS Courses (courseID INT, courseName VARCHAR(100), credits INT, semester VARCHAR(5), professorID INT)");
-            stmt.execute("CREATE TABLE IF NOT EXISTS Enrollments (studentID INT, courseID INT, grade FLOAT, enrollmentDate VARCHAR(100))"); // shouldnt be varchar
+            stmt.execute("CREATE TABLE IF NOT EXISTS Enrollments (studentID INT, courseID INT, grade FLOAT)"); // shouldnt be varchar
 
             Generator.addData(conn);
             rs = stmt.executeQuery("SELECT NOW();");
@@ -36,45 +37,46 @@ public class Main {
     static class Generator {
         static int studentCount = 16384;
         static int professorCount = 1024;
-        static String[] firstNames = new String[] {"David", "Noah", "Liam", "Jacob", "William", "Mason", "Ethan", "Michael", "Alexander", "James", "Elijah", "Benjamin", "Daniel", "Aiden", "Logan", "Jayden", "Emma", "Olivia", "Sophia", "Isabella", "Ava", "Mia", "Abigail", "Emily", "Charlotte", "Madison", "Elizabeth", "Amelia", "Evelyn", "Ella", "Chloe", "Angelo", "Muhammad", "Amirezza", "Arian", "Kelly", "Arnav", "Joshua", "Mick", "Tiana", "Harun", "Pranav", "Alan", "Monica"};
-        static String[] lastNames = new String[] {"Tsao", "Zhou", "Tran", "Nguyen", "Singh", "Park", "Lin", "Le", "Howard", "Barman", "Evans", "Shakrovsky", "Taylor", "Rao", "Yrigoven", "Bacon", "Smith", "Lopez", "Williams", "Perez", "Harris", "Scott", "Hall", "Cruz", "Cook", "Reed", "Watson", "Mendoza", "Patel", "Sanders", "Walter", "Bach", "Mozart", "Einstein", "Beethoven", "Mahler", "Elbertson", "Kimmel", "Rovenpera", "Kasparov", "Truong", "Gould", "Holst", "Hirose", "Bonds"};
-        static String[] depts = new String[] {"CS", "ENGL", "MATH", "KIN", "PHYS", "BIOL", "CHEM", "GEOL", "ART", "EE", "CMPE", "HIST", "MUSC"};
-        static String[] passwords = new String[] {"123456", "123456789", "12345678", "password", "qwerty123", "0xdeadbeef", "ssladded", "removedhere", "admin", "root", "dogname", "catname", "racecar", "abc123", "000000", "hunter2", "*******", "lanciastratos", "audiquattrogrb", "leetcode"};
+        static String[] firstNames = new String[]{"David", "Noah", "Liam", "Jacob", "William", "Mason", "Ethan", "Michael", "Alexander", "James", "Elijah", "Benjamin", "Daniel", "Aiden", "Logan", "Jayden", "Emma", "Olivia", "Sophia", "Isabella", "Ava", "Mia", "Abigail", "Emily", "Charlotte", "Madison", "Elizabeth", "Amelia", "Evelyn", "Ella", "Chloe", "Angelo", "Muhammad", "Amirezza", "Arian", "Kelly", "Arnav", "Joshua", "Mick", "Tiana", "Harun", "Pranav", "Alan", "Monica"};
+        static String[] lastNames = new String[]{"Tsao", "Zhou", "Tran", "Nguyen", "Singh", "Park", "Lin", "Le", "Howard", "Barman", "Evans", "Shakrovsky", "Taylor", "Rao", "Yrigoven", "Bacon", "Smith", "Lopez", "Williams", "Perez", "Harris", "Scott", "Hall", "Cruz", "Cook", "Reed", "Watson", "Mendoza", "Patel", "Sanders", "Walter", "Bach", "Mozart", "Einstein", "Beethoven", "Mahler", "Elbertson", "Kimmel", "Rovenpera", "Kasparov", "Truong", "Gould", "Holst", "Hirose", "Bonds"};
+        static String[] depts = new String[]{"CS", "ENGL", "MATH", "KIN", "PHYS", "BIOL", "CHEM", "GEOL", "ART", "EE", "CMPE", "HIST", "MUSC"};
+        static String[] passwords = new String[]{"123456", "123456789", "12345678", "password", "qwerty123", "0xdeadbeef", "ssladded", "removedhere", "admin", "root", "dogname", "catname", "racecar", "abc123", "000000", "hunter2", "*******", "lanciastratos", "audiquattrogrb", "leetcode"};
         static int minCourseNum = 0;
         static int maxCourseNum = 300;
         static int courseCount = 1000;
         static int startYear = 10;
         static int endYear = 25;
         static int enrollmentCount = 1 << 15;
-        static String[] sessions = new String[] {"SP", "SM", "FA", "WN"};
+        static String[] sessions = new String[]{"SP", "SM", "FA", "WN"};
 
         public static void addData(Connection conn) throws SQLException {
             ArrayList<Student> students = new ArrayList<>();
             ArrayList<Professor> professors = new ArrayList<>();
             ArrayList<Course> courses = new ArrayList<>();
             ArrayList<Enrollment> enrollments = new ArrayList<>();
+            Random random = new Random(157);
+
             long prime = (int) (1e9 + 7);
             for (int i = 1; i <= studentCount; i++) {
                 students.add(new Student(i,
-                        firstNames[(int) ((i * prime) % firstNames.length)] + " " + lastNames[(int) ((i * prime) % lastNames.length)],
+                        firstNames[random.nextInt(firstNames.length)] + " " + lastNames[random.nextInt(lastNames.length)],
                         passwords[(int) ((i * prime) % passwords.length)]));
             }
             for (int i = 1; i <= professorCount; i++) {
                 professors.add(new Professor(i,
-                        firstNames[(int) (((i + studentCount) * prime) % firstNames.length)] + " " + lastNames[(int) (((i + studentCount) * prime) % lastNames.length)]));
+                        firstNames[random.nextInt(firstNames.length)] + " " + lastNames[random.nextInt(lastNames.length)]));
             }
             for (int i = 1; i <= courseCount; i++) {
                 courses.add(new Course(i,
-                        depts[(int) ((i * prime) % depts.length)] + "-" + ((i * prime) % maxCourseNum + minCourseNum),
-                        (int) (i * prime) % 5,
-                        sessions[(int) ((i * prime) % sessions.length)] + ((i * prime) % (endYear - startYear) + startYear),
-                        professors.get((int) ((i * prime) % professorCount))));
+                        depts[random.nextInt(depts.length)] + "-" + (random.nextInt(maxCourseNum + minCourseNum)),
+                        random.nextInt(5),
+                        sessions[random.nextInt(sessions.length)] + (random.nextInt((endYear - startYear) + startYear)),
+                        professors.get(random.nextInt(professorCount))));
             }
             for (int i = 1; i <= enrollmentCount; i++) {
-                enrollments.add(new Enrollment(students.get((int) ((i * prime) % students.size())),
-                        courses.get((int) ((i * prime) % courses.size())),
-                        (i * prime) % 100 + ((i * prime * 3) % 100.0d) / 100,
-                        "IDK probably redundant since alr in course"));
+                enrollments.add(new Enrollment(students.get(random.nextInt(students.size())),
+                        courses.get(random.nextInt(courses.size())),
+                        random.nextDouble() * 100.0));
             }
             System.out.println("Done Generating");
             Statement statement = conn.createStatement();
@@ -88,7 +90,7 @@ public class Main {
                 statement.execute("INSERT INTO Courses (courseID, courseName, credits, professorID) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ");");
             }
             for (Enrollment e : enrollments) {
-                statement.execute("INSERT INTO Enrollments (studentID, courseID, grade, enrollmentDate) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ", '" + e.enrollmentDate + "');");
+                statement.execute("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ");");
             }
             System.out.println("Done Adding");
         }
@@ -135,13 +137,11 @@ public class Main {
             Student student;
             Course course;
             double grade;
-            String enrollmentDate;
 
-            public Enrollment(Student student, Course course, double grade, String enrollmentDate) {
+            public Enrollment(Student student, Course course, double grade) {
                 this.student = student;
                 this.course = course;
                 this.grade = grade;
-                this.enrollmentDate = enrollmentDate;
             }
 
         }
