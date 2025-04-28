@@ -16,10 +16,12 @@ class Student {
 class Professor {
     int professorID;
     String professorName;
+    String password;
 
-    public Professor(int professorID, String professorName) {
+    public Professor(int professorID, String professorName, String password) {
         this.professorID = professorID;
         this.professorName = professorName;
+        this.password = password;
     }
 }
 
@@ -101,6 +103,8 @@ interface DataLayer {
 
     LoginResult login(String name, String password);
 
+    boolean signUp(String name, String password);
+
     double studentGpa(int studentID);
 
     List<StudentCourseInfo> studentCourses(int studentID);
@@ -122,6 +126,31 @@ class InMemoryDataLayer implements DataLayer {
     private List<Professor> professors = new ArrayList<>();
     private List<Course> courses = new ArrayList<>();
     private List<Enrollment> enrollments = new ArrayList<>();
+
+    public void populateDummyData() {
+        Professor prof1 = new Professor(1, "ProfSmith", "password1");
+        Professor prof2 = new Professor(2, "ProfJohnson", "password2");
+        professors.add(prof1);
+        professors.add(prof2);
+
+        courses.add(new Course(1, "Database Systems", 3, "Spring 2025", prof1));
+        courses.add(new Course(2, "Algorithms", 4, "Spring 2025", prof2));
+
+        Student student1 = new Student(1, "Alice", "password1");
+        Student student2 = new Student(2, "Bob", "password2");
+        students.add(student1);
+        students.add(student2);
+
+        enrollments.add(new Enrollment(1, 1, "A", new Date().toString()));
+        enrollments.add(new Enrollment(2, 2, "B", new Date().toString()));
+    }
+
+    @Override
+    public boolean signUp(String name, String password) {
+        int newID = students.size() + 1;
+        students.add(new Student(newID, name, password));
+        return true;
+    }
 
     @Override
     public List<Course> allCourses() {

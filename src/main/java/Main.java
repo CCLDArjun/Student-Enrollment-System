@@ -8,9 +8,11 @@ import java.awt.event.*;
 
 public class Main {
     public static void main(String[] args) {
-        boolean runGui = false;
+        boolean runGui = true;
         if (runGui) {
-            SwingUtilities.invokeLater(() -> new StudentManagementGUI(new InMemoryDataLayer()));
+            InMemoryDataLayer layer = new InMemoryDataLayer();
+            layer.populateDummyData();
+            SwingUtilities.invokeLater(() -> new StudentManagementGUI(layer));
             return;
         }
 
