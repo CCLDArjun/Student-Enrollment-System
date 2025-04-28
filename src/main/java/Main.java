@@ -2,9 +2,18 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.EmptyStackException;
 import java.util.Random;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
 public class Main {
     public static void main(String[] args) {
+        boolean runGui = false;
+        if (runGui) {
+            SwingUtilities.invokeLater(() -> new StudentManagementGUI(new InMemoryDataLayer()));
+            return;
+        }
+
         String url = "jdbc:mysql://localhost:3306/mydb";
         String user = "root";
         String password = "root";
@@ -33,6 +42,7 @@ public class Main {
             e.printStackTrace();
         }
     }
+
 
     static class Generator {
         static int studentCount = 16384;
