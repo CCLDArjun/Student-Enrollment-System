@@ -3,6 +3,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class Retriever implements DataLayer {
 
@@ -27,6 +28,39 @@ public class Retriever implements DataLayer {
             return null;
         }
     }
+
+    private Student retreiveStudent(int id) { // maybe change to optional
+        try {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM students WHERE studentID = " + id + ";");
+            rs.next();
+            if (rs.getInt("count") != 1) {
+                return null;
+            }
+            rs = conn.createStatement().executeQuery("SELECT * FROM students WHERE studentID = " + id + ";");
+            rs.next();
+            return new Student(rs.getInt("studentID"), rs.getString("studentName"), rs.getString("password"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private Professor retreiveProfessor(int id) {
+        try {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM professors WHERE professorID = " + id + ";");
+            rs.next();
+            if (rs.getInt("count") != 1) {
+                return null;
+            }
+            rs = conn.createStatement().executeQuery("SELECT * FROM professors WHERE professorID = " + id + ";");
+            rs.next();
+            return new Professor(rs.getInt("professorID"), rs.getString("professorName"), rs.getString("password"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 
     private Pair<Course, Professor> createCourseProfessor(ResultSet rs) {
         try {
@@ -67,10 +101,22 @@ public class Retriever implements DataLayer {
         return null;
     }
 
+    public LoginResult loginID(int id, String password) {
+        Student student = retreiveStudent(id);
+        Professor professor = retreiveProfessor(id);
+        if (student != null && password.equals(student.password)) {
+            return new LoginResult(LoginResultType.STUDENT, Optional.of(student), Optional.empty());
+        } else if (professor != null && password.equals(professor.password)) {
+            return new LoginResult(LoginResultType.PROFESSOR, Optional.empty(), Optional.of(professor));
+        }
+        return new LoginResult(LoginResultType.INVALID, Optional.empty(), Optional.empty());
+    }
+
     @Override
     public boolean signUp(String name, String password) {
         return false;
     }
+
 
     @Override
     public double studentGpa(int studentID) {
@@ -84,8 +130,9 @@ public class Retriever implements DataLayer {
                 int courseID = rs.getInt("courseID");
                 Statement innerStmt = conn.createStatement();
                 ResultSet innerRs = innerStmt.executeQuery("SELECT credits FROM courses WHERE courseID = " + courseID + ";");
+                innerRs.next();
                 int credits = innerRs.getInt("credits");
-                totalCredits += credits;
+                totalCredits += credits * 100.0;
                 weightedCredits += credits * grade;
             }
             return (weightedCredits / totalCredits) * 4.0; // 4.0 grade scale?
@@ -109,39 +156,65 @@ public class Retriever implements DataLayer {
                 double grade = rs.getFloat("grade");
                 Statement innerStmt = conn.createStatement();
                 ResultSet innerRs = innerStmt.executeQuery("SELECT * FROM courses WHERE courseID = " + courseID + ";");
+                innerRs.next();
                 Pair<Course, Professor> pair = createCourseProfessor(innerRs);
                 assert pair != null;
                 result.add(new StudentCourseInfo(pair.first, Double.toString(grade), pair.second));
             }
+            return result;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
+    /**
+     * @param studentID Student to add course to
+     * @param courseID  ID of desired course
+     * @return
+     */
     @Override
     public boolean addCourse(int studentID, int courseID) {
         try {
             Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM enrollments WHERE studentID = " + studentID + " AND courseID = " + courseID + ";");
+            rs.next();
+            if (rs.getInt("count") > 0) {
+                throw new Exception("Add Course - Student is already enrolled");
+            }
+            rs = stmt.executeQuery("SELECT COUNT(*) as count FROM courses WHERE courseID = " + courseID + ";");
+            rs.next();
+            if (rs.getInt("count") != 1) {
+                throw new Exception("Add Course - Course does not exist");
+            }
+            stmt.execute("INSERT INTO enrollments (studentID, courseID, grade) VALUES (" + studentID + ", " + courseID + ", " + 0xdeadbeef + ");");
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     /**
      * @param studentID ID of the student
-     * @param courseID ID of the course
+     * @param courseID  ID of the course
      * @return True if the course exists, False otherwise
      */
     @Override
     public boolean dropCourse(int studentID, int courseID) {
         try {
             Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM enrollments WHERE studentID = " + studentID + " AND courseID = " + courseID + ";");
+            rs.next();
+            if (rs.getInt("count") == 0) {
+                throw new Exception("Student is not enrolled");
+            }
+            stmt.execute("DELETE FROM enrollments WHERE studentID = " + studentID + " AND courseID = " + courseID + ";");
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     /**
@@ -154,7 +227,7 @@ public class Retriever implements DataLayer {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT * FROM courses WHERE professorID = " + professorID + ";");
             ArrayList<Course> result = new ArrayList<>();
-            while(rs.next()) {
+            while (rs.next()) {
                 result.add(createCourse(rs));
             }
             return result;
@@ -175,24 +248,52 @@ public class Retriever implements DataLayer {
     public List<CourseStudentInfo> courseStudents(int courseID) { // student, grade
         try {
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT studentID, studentName, password, grade FROM students, enrollments WHERE courseID = + " + courseID + ";");
+            ResultSet rs = stmt.executeQuery("SELECT studentID, grade FROM enrollments WHERE courseID = + " + courseID + ";");
+            List<CourseStudentInfo> result = new ArrayList<>();
+            while (rs.next()) {
+                result.add(new CourseStudentInfo(retreiveStudent(rs.getInt("studentID")), Float.toString(rs.getFloat("grade"))));
+            }
+            return result;
         } catch (Exception e) {
             e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
+
+    /**
+     * @param courseID  ID of course to change
+     * @param studentID ID of student whose grade to change
+     * @param newGrade  The new grade for that course
+     * @return True if the student and course exists and was updated, false otherwise
+     */
     @Override
     public boolean changeGrade(int courseID, int studentID, String newGrade) {
         try {
             Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM students WHERE studentID = " + studentID + ";");
+            rs.next();
+            if (rs.getInt("count") != 1) {
+                throw new Exception("Change Grade - Student does not exist");
+            }
+            rs = stmt.executeQuery("SELECT COUNT(*) as count FROM enrollments WHERE courseID = " + courseID + ";");
+            rs.next();
+            if (rs.getInt("count") == 0) {
+                throw new Exception("Change Grade - Course does not exist");
+            }
+            rs = stmt.executeQuery("SELECT COUNT(*) as count FROM enrollments WHERE studentID = " + studentID + " AND courseID = " + courseID + ";");
+            rs.next();
+            if (rs.getInt("count") == 0) {
+                throw new Exception("Change Grade - Student is not enrolled in course");
+            }
+            return stmt.execute("UPDATE enrollments SET grade = " + Float.parseFloat(newGrade) + " WHERE studentID = " + studentID + " AND courseID = " + courseID + ";"); // False warning from intelliJ
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
 
-    class Pair<T, K> {
+    static class Pair<T, K> {
         public T first;
         public K second;
 

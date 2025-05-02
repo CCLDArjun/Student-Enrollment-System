@@ -8,7 +8,7 @@ import java.awt.event.*;
 
 public class Main {
     public static void main(String[] args) {
-        boolean runGui = true;
+        boolean runGui = false;
         if (runGui) {
             InMemoryDataLayer layer = new InMemoryDataLayer();
             layer.populateDummyData();
@@ -19,29 +19,35 @@ public class Main {
         String url = "jdbc:mysql://localhost:3306/mydb";
         String user = "root";
         String password = "root";
+        boolean regen = false; // Delete and regen DB
+        if (regen) {
+            try (Connection conn = DriverManager.getConnection(url, user, password)) {
+                System.out.println("Connected to database!");
 
-        try (Connection conn = DriverManager.getConnection(url, user, password)) {
-            System.out.println("Connected to database!");
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT NOW();");
 
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT NOW();");
+                while (rs.next()) {
+                    System.out.println("Current Time: " + rs.getString(1));
+                }
+                stmt.execute("DROP TABLE IF EXISTS Students;");
+                stmt.execute("CREATE TABLE Students (studentID INT, studentName VARCHAR(100), password VARCHAR(64));");
+                stmt.execute("DROP TABLE IF EXISTS Professors;");
+                stmt.execute("CREATE TABLE Professors (professorID INT, professorName VARCHAR(100), password VARCHAR(64))");
+                stmt.execute("DROP TABLE IF EXISTS Courses;");
+                stmt.execute("CREATE TABLE Courses (courseID INT, courseName VARCHAR(100), credits INT, semester VARCHAR(5), professorID INT)");
+                stmt.execute("DROP TABLE IF EXISTS Enrollments;");
+                stmt.execute("CREATE TABLE Enrollments (studentID INT, courseID INT, grade FLOAT)");
 
-            while (rs.next()) {
-                System.out.println("Current Time: " + rs.getString(1));
+                Generator.addData(conn);
+                rs = stmt.executeQuery("SELECT NOW();");
+
+                while (rs.next()) {
+                    System.out.println("Current Time: " + rs.getString(1));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            stmt.execute("CREATE TABLE Students (studentID INT, studentName VARCHAR(100), password VARCHAR(64));");
-            stmt.execute("CREATE TABLE Professors (professorID INT, professorName VARCHAR(100))");
-            stmt.execute("CREATE TABLE Courses (courseID INT, courseName VARCHAR(100), credits INT, semester VARCHAR(5), professorID INT)");
-            stmt.execute("CREATE TABLE Enrollments (studentID INT, courseID INT, grade FLOAT)"); // shouldnt be varchar
-
-            Generator.addData(conn);
-            rs = stmt.executeQuery("SELECT NOW();");
-
-            while (rs.next()) {
-                System.out.println("Current Time: " + rs.getString(1));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
     }
 
@@ -58,7 +64,7 @@ public class Main {
         static int courseCount = 1000;
         static int startYear = 10;
         static int endYear = 25;
-        static int enrollmentCount = courseCount * 4 * 2;
+        static int enrollmentCount = studentCount * 4 * 2;
         static String[] sessions = new String[]{"SP", "SM", "FA", "WN"};
 
         public static void addData(Connection conn) throws SQLException {
@@ -75,14 +81,14 @@ public class Main {
                         passwords[(int) ((i * prime) % passwords.length)]));
             }
             for (int i = 1; i <= professorCount; i++) {
-                professors.add(new Professor(i,
-                        firstNames[random.nextInt(firstNames.length)] + " " + lastNames[random.nextInt(lastNames.length)]));
+                professors.add(new Professor(studentCount + i,
+                        firstNames[random.nextInt(firstNames.length)] + " " + lastNames[random.nextInt(lastNames.length)], passwords[random.nextInt(passwords.length)]));
             }
             for (int i = 1; i <= courseCount; i++) {
                 courses.add(new Course(i,
                         depts[random.nextInt(depts.length)] + "-" + (random.nextInt(maxCourseNum + minCourseNum)),
                         random.nextInt(5),
-                        sessions[random.nextInt(sessions.length)] + (random.nextInt((endYear - startYear) + startYear)),
+                        sessions[random.nextInt(sessions.length)] + (random.nextInt(endYear - startYear) + startYear),
                         professors.get(random.nextInt(professorCount))));
             }
             for (int i = 1; i <= enrollmentCount; i++) {
@@ -96,10 +102,10 @@ public class Main {
                 statement.execute("INSERT INTO Students (studentID, studentName, password) VALUES(" + s.id + ", '" + s.name + "', '" + s.password + "');");
             }
             for (Professor p : professors) {
-                statement.execute("INSERT INTO Professors (professorID, professorName) VALUES(" + p.id + ", '" + p.name + "');");
+                statement.execute("INSERT INTO Professors (professorID, professorName, password) VALUES(" + p.id + ", '" + p.name + "', '" + p.password + "');");
             }
             for (Course c : courses) {
-                statement.execute("INSERT INTO Courses (courseID, courseName, credits, professorID) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ");");
+                statement.execute("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ", '" + c.semester + "');");
             }
             for (Enrollment e : enrollments) {
                 statement.execute("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ");");
@@ -122,10 +128,12 @@ public class Main {
         static class Professor {
             int id;
             String name;
+            String password;
 
-            public Professor(int id, String name) {
+            public Professor(int id, String name, String password) {
                 this.id = id;
                 this.name = name;
+                this.password = password;
             }
         }
 
