@@ -75,6 +75,23 @@ public class Retriever implements DataLayer {
         }
     }
 
+    public int idCount() {
+        try {
+            int result = 0;
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT COUNT(*) as count FROM professors;");
+            rs.next();
+            result += rs.getInt("count");
+            rs = stmt.executeQuery("SELECT COUNT(*) as count FROM students;");
+            rs.next();
+            result += rs.getInt("count");
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
     @Override
     public List<Course> allCourses() {
         try {
@@ -118,6 +135,31 @@ public class Retriever implements DataLayer {
     }
 
 
+    /**
+     * @param name Student's name
+     * @param password Student's password
+     * @return The student ID if process succeeds, -1 otherwise
+     */
+    public int signUpID(String name, String password) {
+        int id = idCount();
+        if(id <= 0) {
+            return 0;
+        }
+        while((retreiveStudent(id) != null || retreiveProfessor(id) != null) && id > 0) {
+            id++;
+        }
+        if(id <= 0) {
+            return -1; // Overflow
+        }
+        try {
+            conn.createStatement().execute("INSERT INTO students (studentID, studentName, password) VALUES (" + id + ", '" + name + "', '" + password + "');");
+            return id;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+    
     @Override
     public double studentGpa(int studentID) {
         try {

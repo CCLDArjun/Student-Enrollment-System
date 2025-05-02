@@ -85,6 +85,13 @@ public class Tester {
             if(correctProfessorPasswordResult.type != LoginResultType.PROFESSOR || correctProfessorPasswordResult.professor.isEmpty() || correctProfessorPasswordResult.student.isPresent()) {
                 throw new Exception("FAIL | Login Professor - Should have succeeded");
             }
+            int newID = r.signUpID("Mara Sov", "gambitsucks");
+            if(printInfo) {
+                System.out.println("New ID is " + newID);
+            }
+            if(newID <= 0) {
+                throw new Exception("FAIL | Sign up");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return;
