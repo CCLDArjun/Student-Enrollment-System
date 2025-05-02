@@ -29,10 +29,10 @@ public class Main {
             while (rs.next()) {
                 System.out.println("Current Time: " + rs.getString(1));
             }
-            stmt.execute("CREATE TABLE IF NOT EXISTS Students (studentID INT, studentName VARCHAR(100), password VARCHAR(64));");
-            stmt.execute("CREATE TABLE IF NOT EXISTS Professors (professorID INT, professorName VARCHAR(100))");
-            stmt.execute("CREATE TABLE IF NOT EXISTS Courses (courseID INT, courseName VARCHAR(100), credits INT, semester VARCHAR(5), professorID INT)");
-            stmt.execute("CREATE TABLE IF NOT EXISTS Enrollments (studentID INT, courseID INT, grade FLOAT)"); // shouldnt be varchar
+            stmt.execute("CREATE TABLE Students (studentID INT, studentName VARCHAR(100), password VARCHAR(64));");
+            stmt.execute("CREATE TABLE Professors (professorID INT, professorName VARCHAR(100))");
+            stmt.execute("CREATE TABLE Courses (courseID INT, courseName VARCHAR(100), credits INT, semester VARCHAR(5), professorID INT)");
+            stmt.execute("CREATE TABLE Enrollments (studentID INT, courseID INT, grade FLOAT)"); // shouldnt be varchar
 
             Generator.addData(conn);
             rs = stmt.executeQuery("SELECT NOW();");
@@ -58,7 +58,7 @@ public class Main {
         static int courseCount = 1000;
         static int startYear = 10;
         static int endYear = 25;
-        static int enrollmentCount = 1 << 15;
+        static int enrollmentCount = courseCount * 4 * 2;
         static String[] sessions = new String[]{"SP", "SM", "FA", "WN"};
 
         public static void addData(Connection conn) throws SQLException {
