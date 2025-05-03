@@ -29,6 +29,7 @@ public class Retriever implements DataLayer {
         }
     }
 
+    // Probably could use the fact that next returns a boolean
     private Student retreiveStudent(int id) { // maybe change to optional
         try {
             ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM students WHERE studentID = " + id + ";");
@@ -59,6 +60,40 @@ public class Retriever implements DataLayer {
             e.printStackTrace();
             return null;
         }
+    }
+
+    private Course retreiveCourse(int id) {
+        try {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM courses WHERE courseID = " + id + ";");
+            rs.next();
+            if (rs.getInt("count") != 1) {
+                return null;
+            }
+            rs = conn.createStatement().executeQuery("SELECT * FROM courses WHERE courseID = " + id + ";");
+            rs.next();
+            return new Course(rs.getInt("courseID"), rs.getString("courseName"), rs.getInt("credits"), rs.getString("semester"), retreiveProfessor(rs.getInt("professorID")));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
+    /**
+     * @return The next available ID for a student or professor, returns -1 if none available in sequence
+     */
+    private int nextPersonID() {
+        int id = idCount();
+        if(id <= 0) {
+            return -1;
+        }
+        while((retreiveStudent(id) != null || retreiveProfessor(id) != null) && id > 0) {
+            id++;
+        }
+        if(id <= 0) {
+            return -1; // Overflow
+        }
+        return id;
     }
 
 
@@ -92,6 +127,17 @@ public class Retriever implements DataLayer {
         }
     }
 
+    public int courseCount() {
+        try {
+            ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM courses;");
+            rs.next();
+            return rs.getInt("count");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
     @Override
     public List<Course> allCourses() {
         try {
@@ -114,11 +160,7 @@ public class Retriever implements DataLayer {
     }
 
     @Override
-    public LoginResult login(String name, String password) {
-        return null;
-    }
-
-    public LoginResult loginID(int id, String password) {
+    public LoginResult login(int id, String password) {
         Student student = retreiveStudent(id);
         Professor professor = retreiveProfessor(id);
         if (student != null && password.equals(student.password)) {
@@ -129,30 +171,40 @@ public class Retriever implements DataLayer {
         return new LoginResult(LoginResultType.INVALID, Optional.empty(), Optional.empty());
     }
 
-    @Override
-    public boolean signUp(String name, String password) {
-        return false;
-    }
-
 
     /**
      * @param name Student's name
      * @param password Student's password
      * @return The student ID if process succeeds, -1 otherwise
      */
-    public int signUpID(String name, String password) {
-        int id = idCount();
+    @Override
+    public int signUpStudent(String name, String password) {
+        int id = nextPersonID();
         if(id <= 0) {
-            return 0;
-        }
-        while((retreiveStudent(id) != null || retreiveProfessor(id) != null) && id > 0) {
-            id++;
-        }
-        if(id <= 0) {
-            return -1; // Overflow
+            return -1;
         }
         try {
             conn.createStatement().execute("INSERT INTO students (studentID, studentName, password) VALUES (" + id + ", '" + name + "', '" + password + "');");
+            return id;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+    }
+
+    /**
+     * @param name Professor's name
+     * @param password Professor's password
+     * @return The professor ID if process succeeds, -1 otherwise
+     */
+    @Override
+    public int signUpProfessor(String name, String password) {
+        int id = nextPersonID();
+        if(id <= 0) {
+            return -1;
+        }
+        try {
+            conn.createStatement().execute("INSERT INTO professors (professorID, professorName, password) VALUES (" + id + ", '" + name + "', '" + password + "');");
             return id;
         } catch (Exception e) {
             e.printStackTrace();
@@ -333,6 +385,23 @@ public class Retriever implements DataLayer {
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public void createCourse(int profID, String courseName, int credits, String semester) {
+        int id = courseCount();
+        while(retreiveCourse(id) != null && id > 0) {
+            id++;
+        }
+        if(id < 0) {
+            return;
+        }
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.execute("INSERT INTO courses (courseID, courseName, credits, semester, professorID) VALUES (" + id + ", '" + courseName + "', " + credits + ", '" + semester + "', " + profID + ");");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     static class Pair<T, K> {

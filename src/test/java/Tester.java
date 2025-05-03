@@ -13,7 +13,8 @@ public class Tester {
             Connection conn = DriverManager.getConnection(url, user, password);
             Retriever r = new Retriever(conn);
             List<Course> courses =  r.allCourses();
-            if (courses.size() != Main.Generator.courseCount) {
+            boolean testGen = false; // Only use for fresh gen
+            if (testGen && courses.size() != Main.Generator.courseCount) {
                 throw new Exception("FAIL | All Courses - Wrong amount of courses");
             }
             int testStudentID = 2;
@@ -66,36 +67,48 @@ public class Tester {
             int studentLoginID = 10235;
             String wrongStudentPassword = "leetcode";
             String correctStudentPassword = "0xdeadbeef";
-            LoginResult wrongStudentPasswordResult = r.loginID(studentLoginID, wrongStudentPassword);
+            LoginResult wrongStudentPasswordResult = r.login(studentLoginID, wrongStudentPassword);
             if(wrongStudentPasswordResult.type != LoginResultType.INVALID || wrongStudentPasswordResult.professor.isPresent() || wrongStudentPasswordResult.student.isPresent()) {
                 throw new Exception("FAIL | Login Student - Should have failed");
             }
-            LoginResult correctStudentPasswordResult = r.loginID(studentLoginID, correctStudentPassword);
+            LoginResult correctStudentPasswordResult = r.login(studentLoginID, correctStudentPassword);
             if(correctStudentPasswordResult.type != LoginResultType.STUDENT || correctStudentPasswordResult.professor.isPresent() || correctStudentPasswordResult.student.isEmpty()) {
                 throw new Exception("FAIL | Login Student - Should have succeeded");
             }
             int professorLoginID = 16699;
             String wrongProfessorPassword = "failall";
             String correctProfessorPassword = "hunter2";
-            LoginResult wrongProfessorPasswordResult = r.loginID(professorLoginID, wrongProfessorPassword);
+            LoginResult wrongProfessorPasswordResult = r.login(professorLoginID, wrongProfessorPassword);
             if(wrongProfessorPasswordResult.type != LoginResultType.INVALID || wrongProfessorPasswordResult.professor.isPresent() || wrongProfessorPasswordResult.student.isPresent()) {
                 throw new Exception("FAIL | Login Professor - Should have failed");
             }
-            LoginResult correctProfessorPasswordResult = r.loginID(professorLoginID, correctProfessorPassword);
+            LoginResult correctProfessorPasswordResult = r.login(professorLoginID, correctProfessorPassword);
             if(correctProfessorPasswordResult.type != LoginResultType.PROFESSOR || correctProfessorPasswordResult.professor.isEmpty() || correctProfessorPasswordResult.student.isPresent()) {
                 throw new Exception("FAIL | Login Professor - Should have succeeded");
             }
-            int newID = r.signUpID("Mara Sov", "gambitsucks");
+            int newStudentID = r.signUpStudent("Mara Sov", "gambitsucks");
             if(printInfo) {
-                System.out.println("New ID is " + newID);
+                System.out.println("New Student ID is " + newStudentID);
             }
-            if(newID <= 0) {
-                throw new Exception("FAIL | Sign up");
+            if(newStudentID <= 0) {
+                throw new Exception("FAIL | Sign up student");
+            }
+            int newProfessorID = r.signUpProfessor("Shaw Han", "iamaztecross");
+            if(printInfo) {
+                System.out.println("New Professor ID is " + newProfessorID);
+            }
+            if(newProfessorID <= 0) {
+                throw new Exception("FAIL | Sign up professor");
+            }
+            int oldCourseSize = r.courseCount();
+            r.createCourse(newProfessorID, "CS146", 3, "SM25");
+            if(oldCourseSize + 1 != r.courseCount()) {
+                throw new Exception("FAIL | Course Count Mismatch");
             }
         } catch (Exception e) {
             e.printStackTrace();
             return;
         }
-
+        System.out.println("Pass");
     }
 }
