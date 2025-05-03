@@ -221,6 +221,9 @@ public class Retriever implements DataLayer {
             double weightedCredits = 0;
             while (rs.next()) {
                 double grade = rs.getFloat("grade");
+                if(grade < 0) {
+                    continue;
+                }
                 int courseID = rs.getInt("courseID");
                 Statement innerStmt = conn.createStatement();
                 ResultSet innerRs = innerStmt.executeQuery("SELECT credits FROM courses WHERE courseID = " + courseID + ";");
@@ -380,11 +383,12 @@ public class Retriever implements DataLayer {
             if (rs.getInt("count") == 0) {
                 throw new Exception("Change Grade - Student is not enrolled in course");
             }
-            return stmt.execute("UPDATE enrollments SET grade = " + Float.parseFloat(newGrade) + " WHERE studentID = " + studentID + " AND courseID = " + courseID + ";"); // False warning from intelliJ
+            stmt.execute("UPDATE enrollments SET grade = " + Float.parseFloat(newGrade) + " WHERE studentID = " + studentID + " AND courseID = " + courseID + ";");
+            return true; // False warning from intelliJ
         } catch (Exception e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
     }
 
     @Override

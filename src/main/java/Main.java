@@ -8,20 +8,27 @@ import java.awt.event.*;
 
 public class Main {
     public static void main(String[] args) {
-        boolean runGui = true;
-        if (runGui) {
-            InMemoryDataLayer layer = new InMemoryDataLayer();
-            layer.populateDummyData();
-            SwingUtilities.invokeLater(() -> new StudentManagementGUI(layer));
-            return;
-        }
-
         String url = "jdbc:mysql://localhost:3306/mydb";
         String user = "root";
         String password = "root";
-        boolean regen = false; // Delete and regen DB
+        boolean runGui = false;
+        if (runGui) {
+            InMemoryDataLayer layer = new InMemoryDataLayer();
+            layer.populateDummyData();
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    new StudentManagementGUI(new Retriever(DriverManager.getConnection(url, user, password)));
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            return;
+        }
+
+
+        boolean regen = true; // Delete and regen DB
         if (regen) {
-            try (Connection conn = DriverManager.getConnection(url, user, password)) {
+            try (Connection conn = DriverManager.getConnection(url, user, password)) { // w/o PS 2m 15s
                 System.out.println("Connected to database!");
 
                 Statement stmt = conn.createStatement();
@@ -98,17 +105,39 @@ public class Main {
             }
             System.out.println("Done Generating");
             Statement statement = conn.createStatement();
+            PreparedStatement studentPS = conn.prepareStatement("INSERT INTO Students (studentID, studentName, password) VALUES( ?, ?, ?);");
             for (Student s : students) {
-                statement.execute("INSERT INTO Students (studentID, studentName, password) VALUES(" + s.id + ", '" + s.name + "', '" + s.password + "');");
+                studentPS.setInt(1, s.id);
+                studentPS.setString(2, s.name);
+                studentPS.setString(3, s.password);
+                studentPS.execute();
+//                statement.execute("INSERT INTO Students (studentID, studentName, password) VALUES(" + s.id + ", '" + s.name + "', '" + s.password + "');");
             }
+            PreparedStatement professorPS = conn.prepareStatement("INSERT INTO Professors (professorID, professorName, password) VALUES(?, ?, ?);");
             for (Professor p : professors) {
-                statement.execute("INSERT INTO Professors (professorID, professorName, password) VALUES(" + p.id + ", '" + p.name + "', '" + p.password + "');");
+                professorPS.setInt(1, p.id);
+                professorPS.setString(2, p.name);
+                professorPS.setString(3, p.password);
+                professorPS.execute();
+//                statement.execute("INSERT INTO Professors (professorID, professorName, password) VALUES(" + p.id + ", '" + p.name + "', '" + p.password + "');");
             }
+            PreparedStatement coursePS = conn.prepareStatement("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(?, ?, ?, ?, ?);");
             for (Course c : courses) {
-                statement.execute("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ", '" + c.semester + "');");
+                coursePS.setInt(1, c.id);
+                coursePS.setString(2, c.name);
+                coursePS.setInt(3, c.credits);
+                coursePS.setInt(4, c.professor.id);
+                coursePS.setString(5, c.semester);
+                coursePS.execute();
+//                statement.execute("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ", '" + c.semester + "');");
             }
+            PreparedStatement enrollmentPS = conn.prepareStatement("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(?, ?, ?);");
             for (Enrollment e : enrollments) {
-                statement.execute("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ");");
+                enrollmentPS.setInt(1, e.student.id);
+                enrollmentPS.setInt(2, e.course.id);
+                enrollmentPS.setString(3, String.valueOf(e.grade));
+                enrollmentPS.execute();
+//                statement.execute("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ");");
             }
             System.out.println("Done Adding");
         }
