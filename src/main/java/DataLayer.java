@@ -101,9 +101,11 @@ interface DataLayer {
 
     List<Course> allCourses();
 
-    LoginResult login(String name, String password);
+    LoginResult login(int id, String password);
 
-    boolean signUp(String name, String password);
+    int signUpStudent(String name, String password);
+
+    int signUpProfessor(String name, String password);
 
     double studentGpa(int studentID);
 
@@ -118,6 +120,13 @@ interface DataLayer {
     List<CourseStudentInfo> courseStudents(int courseID);
 
     boolean changeGrade(int courseID, int studentID, String newGrade);
+
+    void createCourse(
+        int profID,
+        String courseName,
+        int credits,
+        String semester
+    );
 }
 
 // In-memory mock implementation
@@ -136,20 +145,27 @@ class InMemoryDataLayer implements DataLayer {
         courses.add(new Course(1, "Database Systems", 3, "Spring 2025", prof1));
         courses.add(new Course(2, "Algorithms", 4, "Spring 2025", prof2));
 
-        Student student1 = new Student(1, "Alice", "password1");
-        Student student2 = new Student(2, "Bob", "password2");
+        Student student1 = new Student(10, "Alice", "password1");
+        Student student2 = new Student(11, "Bob", "password2");
         students.add(student1);
         students.add(student2);
 
-        enrollments.add(new Enrollment(1, 1, "A", new Date().toString()));
-        enrollments.add(new Enrollment(2, 2, "B", new Date().toString()));
+        enrollments.add(new Enrollment(10, 1, "A", new Date().toString()));
+        enrollments.add(new Enrollment(11, 2, "B", new Date().toString()));
     }
 
     @Override
-    public boolean signUp(String name, String password) {
+    public int signUpStudent(String name, String password) {
         int newID = students.size() + 1;
         students.add(new Student(newID, name, password));
-        return true;
+        return newID;
+    }
+
+    @Override
+    public int signUpProfessor(String name, String password) {
+        int newID = professors.size() + 1;
+        professors.add(new Professor(newID, name, password));
+        return newID;
     }
 
     @Override
@@ -158,14 +174,14 @@ class InMemoryDataLayer implements DataLayer {
     }
 
     @Override
-    public LoginResult login(String name, String password) {
+    public LoginResult login(int id, String password) {
         for (Student s : students) {
-            if (s.studentName.equals(name) && s.password.equals(password)) {
+            if (s.studentID == id && s.password.equals(password)) {
                 return new LoginResult(LoginResultType.STUDENT, Optional.of(s), Optional.empty());
             }
         }
         for (Professor p : professors) {
-            if (p.professorName.equals(name)) { // Assume professor doesn't need password for now
+            if (p.professorID == id) { // Assume professor doesn't need password for now
                 return new LoginResult(LoginResultType.PROFESSOR, Optional.empty(), Optional.of(p));
             }
         }
@@ -261,5 +277,21 @@ class InMemoryDataLayer implements DataLayer {
             }
         }
         return false;
+    }
+
+    @Override
+    public void createCourse(
+        int profID,
+        String courseName,
+        int credits,
+        String semester
+    ) {
+        Professor professor = professors.stream()
+            .filter(p -> p.professorID == profID)
+            .findFirst().orElse(null);
+        if (professor != null) {
+            Course newCourse = new Course(courses.size() + 1, courseName, credits, semester, professor);
+            courses.add(newCourse);
+        }
     }
 }

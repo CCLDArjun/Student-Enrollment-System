@@ -8,7 +8,7 @@ import java.awt.event.*;
 
 public class Main {
     public static void main(String[] args) {
-        boolean runGui = false;
+        boolean runGui = true;
         if (runGui) {
             InMemoryDataLayer layer = new InMemoryDataLayer();
             layer.populateDummyData();

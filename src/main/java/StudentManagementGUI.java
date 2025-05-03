@@ -22,37 +22,68 @@ public class StudentManagementGUI {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(600, 400);
 
-        showLoginScreen();
+        showHomeScreen();
 
         frame.setVisible(true);
     }
 
-    private void showLoginScreen() {
+
+    private void showHomeScreen() {
         frame.getContentPane().removeAll();
+        frame.setLayout(new BorderLayout());
 
-        JPanel panel = new JPanel(new GridLayout(5, 2));
-
-        JTextField nameField = new JTextField();
-        JPasswordField passField = new JPasswordField();
+        JPanel panel = new JPanel(new GridLayout(3, 1));
 
         JButton loginBtn = new JButton("Login");
         JButton signupBtn = new JButton("Sign Up");
+        JButton exitBtn = new JButton("Exit");
 
-        panel.add(new JLabel("Name:"));
-        panel.add(nameField);
+        panel.add(loginBtn);
+        panel.add(signupBtn);
+        panel.add(exitBtn);
+
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
+        frame.revalidate();
+
+        loginBtn.addActionListener(e -> loginScreen());
+        signupBtn.addActionListener(e -> signupScreen());
+        exitBtn.addActionListener(e -> System.exit(0));
+    }
+
+    private void loginScreen() {
+        frame.getContentPane().removeAll();
+        frame.setLayout(new BorderLayout());
+
+        JPanel panel = new JPanel(new GridLayout(5, 2));
+
+        JTextField idField = new JTextField();
+        JPasswordField passField = new JPasswordField();
+        JComboBox<String> roleComboBox = new JComboBox<>(new String[]{"Student", "Professor"});
+
+        JButton loginBtn = new JButton("Login");
+        JButton exit = new JButton("Home");
+
+        panel.add(new JLabel("ID:"));
+        panel.add(idField);
         panel.add(new JLabel("Password:"));
         panel.add(passField);
 
         panel.add(loginBtn);
-        panel.add(signupBtn);
+        panel.add(exit);
 
-        frame.getContentPane().add(panel);
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
         frame.revalidate();
 
         loginBtn.addActionListener(e -> {
-            String name = nameField.getText();
+            String id_str = idField.getText();
+            int id = id_str.isEmpty() ? -1 : Integer.parseInt(id_str);
+            if (id == -1) {
+                JOptionPane.showMessageDialog(frame, "Invalid ID");
+                return;
+            }
+
             String password = new String(passField.getPassword());
-            LoginResult result = dataLayer.login(name, password);
+            LoginResult result = dataLayer.login(id, password);
             if (result.type == LoginResultType.STUDENT && result.student.isPresent()) {
                 currentStudentID = result.student.get().studentID;
                 showStudentDashboard();
@@ -64,17 +95,51 @@ public class StudentManagementGUI {
             }
         });
 
-        signupBtn.addActionListener(e -> {
-            String name = nameField.getText();
-            String password = new String(passField.getPassword());
-            boolean success = dataLayer.signUp(name, password);
-            if (success) {
-                JOptionPane.showMessageDialog(frame, "Signup Successful!");
-            } else {
-                JOptionPane.showMessageDialog(frame, "Signup Failed");
-            }
-        });
+        exit.addActionListener(e -> showHomeScreen());
     }
+
+    private void signupScreen() {
+        frame.getContentPane().removeAll();
+        frame.setLayout(new BorderLayout());
+
+        JPanel panel = new JPanel(new GridLayout(5, 2));
+
+        JTextField idField = new JTextField();
+        JPasswordField passField = new JPasswordField();
+        JComboBox<String> roleComboBox = new JComboBox<>(new String[]{"Student", "Professor"});
+
+        JButton signupBtn = new JButton("Sign Up");
+        JButton exit = new JButton("Home");
+
+        panel.add(new JLabel("Name:"));
+        panel.add(idField);
+        panel.add(new JLabel("Password:"));
+        panel.add(passField);
+        panel.add(roleComboBox);
+
+        panel.add(signupBtn);
+        panel.add(exit);
+
+        frame.getContentPane().add(panel, BorderLayout.CENTER);
+        frame.revalidate();
+
+        signupBtn.addActionListener(e -> {
+            String name = idField.getText();
+            String password = new String(passField.getPassword());
+            int id = -1;
+
+            if (roleComboBox.getSelectedItem().equals("Student")) {
+                id = dataLayer.signUpStudent(name, password);
+            } else if (roleComboBox.getSelectedItem().equals("Professor")) {
+                id = dataLayer.signUpProfessor(name, password);
+            }
+
+            JOptionPane.showMessageDialog(frame, "Signup Successful! Your ID is: " + id);
+        });
+
+        exit.addActionListener(e -> showHomeScreen());
+    }
+
 
     private void showStudentDashboard() {
         frame.getContentPane().removeAll();
@@ -103,7 +168,7 @@ public class StudentManagementGUI {
         viewAllCoursesBtn.addActionListener(e -> viewAllCourses());
         logoutBtn.addActionListener(e -> {
             currentStudentID = -1;
-            showLoginScreen();
+            showHomeScreen();
         });
     }
 
@@ -116,10 +181,12 @@ public class StudentManagementGUI {
         JButton viewTeachingBtn = new JButton("View My Courses");
         JButton changeGradeBtn = new JButton("Change Student Grade");
         JButton logoutBtn = new JButton("Logout");
+        JButton addCourseBtn = new JButton("Add Course");
 
         panel.add(viewTeachingBtn);
         panel.add(changeGradeBtn);
         panel.add(logoutBtn);
+        panel.add(addCourseBtn);
 
         frame.getContentPane().add(panel, BorderLayout.CENTER);
         frame.revalidate();
@@ -128,8 +195,21 @@ public class StudentManagementGUI {
         changeGradeBtn.addActionListener(e -> changeStudentGradeImproved());
         logoutBtn.addActionListener(e -> {
             currentProfessorID = -1;
-            showLoginScreen();
+            showHomeScreen();
         });
+        addCourseBtn.addActionListener(e -> addCourse());
+    }
+
+    private void addCourse() {
+        String courseName = JOptionPane.showInputDialog(frame, "Enter Course Name:");
+        String creditsStr = JOptionPane.showInputDialog(frame, "Enter Credits:");
+        String semester = JOptionPane.showInputDialog(frame, "Enter Semester:");
+
+        if (courseName != null && creditsStr != null && semester != null) {
+            int credits = Integer.parseInt(creditsStr);
+            dataLayer.createCourse(currentProfessorID, courseName, credits, semester);
+            JOptionPane.showMessageDialog(frame, "Course added successfully!");
+        }
     }
 
     private void viewGrades() {
