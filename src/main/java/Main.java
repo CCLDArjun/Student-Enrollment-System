@@ -11,7 +11,7 @@ public class Main {
         String url = "jdbc:mysql://localhost:3306/mydb";
         String user = "root";
         String password = "root";
-        boolean runGui = false;
+        boolean runGui = true;
         if (runGui) {
             InMemoryDataLayer layer = new InMemoryDataLayer();
             layer.populateDummyData();
@@ -26,7 +26,7 @@ public class Main {
         }
 
 
-        boolean regen = true; // Delete and regen DB
+        boolean regen = false; // Delete and regen DB
         if (regen) {
             try (Connection conn = DriverManager.getConnection(url, user, password)) { // w/o PS 2m 15s
                 System.out.println("Connected to database!");
@@ -68,10 +68,10 @@ public class Main {
         static String[] passwords = new String[]{"123456", "123456789", "12345678", "password", "qwerty123", "0xdeadbeef", "ssladded", "removedhere", "admin", "root", "dogname", "catname", "racecar", "abc123", "000000", "hunter2", "*******", "lanciastratos", "audiquattrogrb", "leetcode"};
         static int minCourseNum = 0; // 0
         static int maxCourseNum = 300; // 300
-        static int courseCount = 20; // 1000
+        static int courseCount = 40; // 1000
         static int startYear = 10;
         static int endYear = 25;
-        static int enrollmentCount = studentCount * 4 * 2;
+        static int enrollmentCount = studentCount * 4 * 4;
         static String[] sessions = new String[]{"SP", "SM", "FA", "WN"};
 
         public static void addData(Connection conn) throws SQLException {

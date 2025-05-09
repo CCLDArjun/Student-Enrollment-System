@@ -459,4 +459,19 @@ public class Retriever implements DataLayer {
             this.second = second;
         }
     }
+
+    public List<Course> filterCourseCredits(int min) {
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM courses WHERE credits >= " + min +  ";");
+            List<Course> result = new ArrayList<>();
+            while(rs.next()) {
+                result.add(createCourse(rs));
+            }
+            return result;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }
