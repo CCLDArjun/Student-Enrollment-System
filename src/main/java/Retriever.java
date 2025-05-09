@@ -29,8 +29,11 @@ public class Retriever implements DataLayer {
         }
     }
 
-    // Probably could use the fact that next returns a boolean
-    private Student retreiveStudent(int id) { // maybe change to optional
+    /**
+     * @param id Student's ID
+     * @return The student with the corresponding ID, null otherwise
+     */
+    private Student retreiveStudent(int id) { 
         try {
             ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM students WHERE studentID = " + id + ";");
             rs.next();
@@ -46,6 +49,11 @@ public class Retriever implements DataLayer {
         }
     }
 
+
+    /**
+     * @param id The professor's ID
+     * @return The professor with the corresponding ID, null otherwise
+     */
     private Professor retreiveProfessor(int id) {
         try {
             ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM professors WHERE professorID = " + id + ";");
@@ -62,6 +70,10 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @param id The course ID
+     * @return The course with the ID, null otherwise
+     */
     private Course retreiveCourse(int id) {
         try {
             ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM courses WHERE courseID = " + id + ";");
@@ -97,6 +109,10 @@ public class Retriever implements DataLayer {
     }
 
 
+    /**
+     * @param rs ResultSet of Query like SELECT * FROM courses WHERE courseID = ___;
+     * @return The professor teaching the course and the course itself if they exist, null otherwise
+     */
     private Pair<Course, Professor> createCourseProfessor(ResultSet rs) {
         try {
             Statement innerStmt = conn.createStatement();
@@ -110,6 +126,9 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @return The amount of entries in Professors and Students
+     */
     public int idCount() {
         try {
             int result = 0;
@@ -127,6 +146,9 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @return The amount of entries in Courses
+     */
     public int courseCount() {
         try {
             ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM courses;");
@@ -138,6 +160,9 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @return All courses in database
+     */
     @Override
     public List<Course> allCourses() {
         try {
@@ -159,6 +184,11 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @param id The user's ID
+     * @param password The user's password
+     * @return A login result corresponding to what user type if successful, invalid otherwise
+     */
     @Override
     public LoginResult login(int id, String password) {
         Student student = retreiveStudent(id);
@@ -211,7 +241,11 @@ public class Retriever implements DataLayer {
             return -1;
         }
     }
-    
+
+    /**
+     * @param studentID The target student
+     * @return The student's GPA on a 4.0 grade scale
+     */
     @Override
     public double studentGpa(int studentID) {
         try {
@@ -239,9 +273,10 @@ public class Retriever implements DataLayer {
         }
     }
 
-    //Course course;
-    //    String grade;
-    //    Professor professor;
+    /**
+     * @param studentID The target student
+     * @return All the course info for a given student
+     */
     @Override
     public List<StudentCourseInfo> studentCourses(int studentID) {
         try {
@@ -268,7 +303,7 @@ public class Retriever implements DataLayer {
     /**
      * @param studentID Student to add course to
      * @param courseID  ID of desired course
-     * @return
+     * @return True if successful, false otherwise
      */
     @Override
     public boolean addCourse(int studentID, int courseID) {
@@ -339,9 +374,6 @@ public class Retriever implements DataLayer {
      * @return A list of all students enrolled into the course
      */
     @Override
-    //SELECT s.studentID, s.studentName, s.password, e.grade, courseID
-    //FROM students s, enrollments e
-    //WHERE s.studentID IN (SELECT studentID from enrollments WHERE courseID = 1) AND e.courseID = 1;
     public List<CourseStudentInfo> courseStudents(int courseID) { // student, grade
         try {
             Statement stmt = conn.createStatement();
@@ -391,6 +423,12 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @param profID The professor teaching the course
+     * @param courseName The name of the course
+     * @param credits The credits this course has
+     * @param semester What semester this course is taught in
+     */
     @Override
     public void createCourse(int profID, String courseName, int credits, String semester) {
         int id = courseCount();
@@ -408,6 +446,10 @@ public class Retriever implements DataLayer {
         }
     }
 
+    /**
+     * @param <T> First object of pair
+     * @param <K> Second object of pair
+     */
     static class Pair<T, K> {
         public T first;
         public K second;
