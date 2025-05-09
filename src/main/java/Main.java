@@ -60,15 +60,15 @@ public class Main {
 
 
     static class Generator {
-        static int studentCount = 16384;
-        static int professorCount = 1024;
+        static int studentCount = 20; // 16384
+        static int professorCount = 20; // 1024
         static String[] firstNames = new String[]{"David", "Noah", "Liam", "Jacob", "William", "Mason", "Ethan", "Michael", "Alexander", "James", "Elijah", "Benjamin", "Daniel", "Aiden", "Logan", "Jayden", "Emma", "Olivia", "Sophia", "Isabella", "Ava", "Mia", "Abigail", "Emily", "Charlotte", "Madison", "Elizabeth", "Amelia", "Evelyn", "Ella", "Chloe", "Angelo", "Muhammad", "Amirezza", "Arian", "Kelly", "Arnav", "Joshua", "Mick", "Tiana", "Harun", "Pranav", "Alan", "Monica"};
         static String[] lastNames = new String[]{"Tsao", "Zhou", "Tran", "Nguyen", "Singh", "Park", "Lin", "Le", "Howard", "Barman", "Evans", "Shakrovsky", "Taylor", "Rao", "Yrigoven", "Bacon", "Smith", "Lopez", "Williams", "Perez", "Harris", "Scott", "Hall", "Cruz", "Cook", "Reed", "Watson", "Mendoza", "Patel", "Sanders", "Walter", "Bach", "Mozart", "Einstein", "Beethoven", "Mahler", "Elbertson", "Kimmel", "Rovenpera", "Kasparov", "Truong", "Gould", "Holst", "Hirose", "Bonds"};
         static String[] depts = new String[]{"CS", "ENGL", "MATH", "KIN", "PHYS", "BIOL", "CHEM", "GEOL", "ART", "EE", "CMPE", "HIST", "MUSC"};
         static String[] passwords = new String[]{"123456", "123456789", "12345678", "password", "qwerty123", "0xdeadbeef", "ssladded", "removedhere", "admin", "root", "dogname", "catname", "racecar", "abc123", "000000", "hunter2", "*******", "lanciastratos", "audiquattrogrb", "leetcode"};
-        static int minCourseNum = 0;
-        static int maxCourseNum = 300;
-        static int courseCount = 1000;
+        static int minCourseNum = 0; // 0
+        static int maxCourseNum = 300; // 300
+        static int courseCount = 20; // 1000
         static int startYear = 10;
         static int endYear = 25;
         static int enrollmentCount = studentCount * 4 * 2;
@@ -111,7 +111,7 @@ public class Main {
                 studentPS.setString(2, s.name);
                 studentPS.setString(3, s.password);
                 studentPS.execute();
-//                statement.execute("INSERT INTO Students (studentID, studentName, password) VALUES(" + s.id + ", '" + s.name + "', '" + s.password + "');");
+                System.out.println("INSERT INTO Students (studentID, studentName, password) VALUES(" + s.id + ", '" + s.name + "', '" + s.password + "');");
             }
             PreparedStatement professorPS = conn.prepareStatement("INSERT INTO Professors (professorID, professorName, password) VALUES(?, ?, ?);");
             for (Professor p : professors) {
@@ -119,7 +119,7 @@ public class Main {
                 professorPS.setString(2, p.name);
                 professorPS.setString(3, p.password);
                 professorPS.execute();
-//                statement.execute("INSERT INTO Professors (professorID, professorName, password) VALUES(" + p.id + ", '" + p.name + "', '" + p.password + "');");
+                System.out.println("INSERT INTO Professors (professorID, professorName, password) VALUES(" + p.id + ", '" + p.name + "', '" + p.password + "');");
             }
             PreparedStatement coursePS = conn.prepareStatement("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(?, ?, ?, ?, ?);");
             for (Course c : courses) {
@@ -129,7 +129,7 @@ public class Main {
                 coursePS.setInt(4, c.professor.id);
                 coursePS.setString(5, c.semester);
                 coursePS.execute();
-//                statement.execute("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ", '" + c.semester + "');");
+                System.out.println("INSERT INTO Courses (courseID, courseName, credits, professorID, semester) VALUES(" + c.id + ", '" + c.name + "', " + c.credits + ", " + c.professor.id + ", '" + c.semester + "');");
             }
             PreparedStatement enrollmentPS = conn.prepareStatement("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(?, ?, ?);");
             for (Enrollment e : enrollments) {
@@ -137,7 +137,7 @@ public class Main {
                 enrollmentPS.setInt(2, e.course.id);
                 enrollmentPS.setString(3, String.valueOf(e.grade));
                 enrollmentPS.execute();
-//                statement.execute("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ");");
+                System.out.println("INSERT INTO Enrollments (studentID, courseID, grade) VALUES(" + e.student.id + ", " + e.course.id + ", " + e.grade + ");");
             }
             System.out.println("Done Adding");
         }
