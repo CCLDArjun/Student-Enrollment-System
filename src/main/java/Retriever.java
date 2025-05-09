@@ -33,7 +33,7 @@ public class Retriever implements DataLayer {
      * @param id Student's ID
      * @return The student with the corresponding ID, null otherwise
      */
-    private Student retreiveStudent(int id) { 
+    private Student retreiveStudent(int id) {
         try {
             ResultSet rs = conn.createStatement().executeQuery("SELECT COUNT(*) as count FROM students WHERE studentID = " + id + ";");
             rs.next();

@@ -1,7 +1,7 @@
-# Installation
+# Project Overview
 
-# Admin Guide
+# Setup
 
-# Professor Guide
+# Dependencies
 
-# Student Guide
+# Other
