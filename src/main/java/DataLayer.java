@@ -127,6 +127,8 @@ interface DataLayer {
         int credits,
         String semester
     );
+
+    public List<Course> filterCourseCredits(int min);
 }
 
 // In-memory mock implementation
@@ -293,5 +295,12 @@ class InMemoryDataLayer implements DataLayer {
             Course newCourse = new Course(courses.size() + 1, courseName, credits, semester, professor);
             courses.add(newCourse);
         }
+    }
+
+    @Override
+    public List<Course> filterCourseCredits(int min) {
+        return courses.stream()
+            .filter(c -> c.credits >= min)
+            .toList();
     }
 }

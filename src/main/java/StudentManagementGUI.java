@@ -151,12 +151,14 @@ public class StudentManagementGUI {
         JButton enrollBtn = new JButton("Enroll in a Course");
         JButton dropBtn = new JButton("Drop a Course");
         JButton viewAllCoursesBtn = new JButton("View All Courses");
+        JButton filterCoursesBtn = new JButton("Filter Courses (by units)");
         JButton logoutBtn = new JButton("Logout");
 
         panel.add(viewGradesBtn);
         panel.add(enrollBtn);
         panel.add(dropBtn);
         panel.add(viewAllCoursesBtn);
+        panel.add(filterCoursesBtn);
         panel.add(logoutBtn);
 
         frame.getContentPane().add(panel, BorderLayout.CENTER);
@@ -170,6 +172,20 @@ public class StudentManagementGUI {
             currentStudentID = -1;
             showHomeScreen();
         });
+        filterCoursesBtn.addActionListener(e -> filterCourses());
+    }
+
+    private void filterCourses() {
+        String input = JOptionPane.showInputDialog(frame, "Enter minimum credits:");
+        if (input != null) {
+            int minCredits = Integer.parseInt(input);
+            List<Course> filteredCourses = dataLayer.filterCourseCredits(minCredits);
+            StringBuilder sb = new StringBuilder();
+            for (Course c : filteredCourses) {
+                sb.append(c.courseID).append(" - ").append(c.courseName).append("\n");
+            }
+            showScrollPane(sb.toString());
+        }
     }
 
     private void showProfessorDashboard() {
@@ -269,23 +285,36 @@ public class StudentManagementGUI {
         }
     }
 
+    private void showScrollPane(String text) {
+        JTextArea textArea = new JTextArea(text);
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+        scrollPane.setPreferredSize(new Dimension(400, 300));
+        JOptionPane.showMessageDialog(frame, scrollPane, "All Courses", JOptionPane.INFORMATION_MESSAGE);
+    }
+
     private void viewAllCourses() {
-        List<Course> all = dataLayer.allCourses();
+        List<Course> courses = dataLayer.allCourses();
         StringBuilder sb = new StringBuilder();
-        for (Course c : all) {
+
+        for (Course c : courses) {
             sb.append(c.courseID).append(" - ").append(c.courseName).append("\n");
         }
-        JOptionPane.showMessageDialog(frame, sb.toString());
+        
+        showScrollPane(sb.toString());
     }
 
     private void viewProfessorCourses() {
         List<Course> courses = dataLayer.professorCourses(currentProfessorID);
-
         StringBuilder sb = new StringBuilder();
         for (Course c : courses) {
             sb.append(c.courseID).append(" - ").append(c.courseName).append("\n");
         }
-        JOptionPane.showMessageDialog(frame, sb.toString());
+
+        if (sb.length() == 0) {
+            sb.append("No courses found.");
+        }
+        showScrollPane(sb.toString());
     }
 
     private void changeStudentGradeImproved() {
