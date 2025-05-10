@@ -20,3 +20,15 @@ application {
     mainClass = 'Main'
 }
 
+tasks.register('fatJar', Jar) {
+    archiveBaseName.set('StudentEnrollmentSystem')
+    archiveVersion.set('1.0')
+    manifest {
+        attributes 'Main-Class': application.mainClass
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
+
