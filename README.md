@@ -6,14 +6,12 @@ Either run create_schema.sql, initialize_data.sql, or run Main with runGui as fa
 
 ## Just Run
 
-Make sure that mysql is running on port 3306 (this is its default port).
+Make sure that mysql is running on port 3306 (this is its default port) and you have cloned the repo.
 ```sh
 $ java -jar build/libs/StudentEnrollmentSystem-1.0.jar
 ```
 
-## Build
-OPTIONAL
-
+## Build (OPTIONAL)
 ```sh
 $ ./gradlew build
 $ ./gradlew run
