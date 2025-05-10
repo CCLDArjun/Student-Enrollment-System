@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS mydb;
+USE mydb;
+
 DROP TABLE IF EXISTS Students;
 CREATE TABLE Students (studentID INT, studentName VARCHAR(100), password VARCHAR(64));
 DROP TABLE IF EXISTS Professors;

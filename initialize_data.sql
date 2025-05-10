@@ -1,3 +1,6 @@
+CREATE DATABASE IF NOT EXISTS mydb;
+USE mydb;
+
 INSERT INTO Students (studentID, studentName, password) VALUES(1, 'Alexander Mendoza', 'removedhere');
 INSERT INTO Students (studentID, studentName, password) VALUES(2, 'Elizabeth Lopez', '000000');
 INSERT INTO Students (studentID, studentName, password) VALUES(3, 'Noah Gould', '123456789');
