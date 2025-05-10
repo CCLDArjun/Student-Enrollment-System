@@ -255,7 +255,7 @@ public class Retriever implements DataLayer {
             double weightedCredits = 0;
             while (rs.next()) {
                 double grade = rs.getFloat("grade");
-                if(grade < 0) {
+                if(grade < 0) { // Ignore placeholder grades
                     continue;
                 }
                 int courseID = rs.getInt("courseID");
@@ -266,7 +266,7 @@ public class Retriever implements DataLayer {
                 totalCredits += credits * 100.0;
                 weightedCredits += credits * grade;
             }
-            return (weightedCredits / totalCredits) * 4.0; // 4.0 grade scale?
+            return (weightedCredits / totalCredits) * 4.0; // 4.0 grade 
         } catch (Exception e) {
             e.printStackTrace();
             return -1.0;
